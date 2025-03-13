@@ -1,21 +1,26 @@
 "use client";
 import type { NextPage } from "next";
-import { ConnectButton, useActiveAccount } from "thirdweb/react";
+import { ConnectButton } from "thirdweb/react";
 import { client } from "../../lib/client";
 import { generatePayload, isLoggedIn, login, logout } from "./actions/auth";
-import { defineChain, getContract, deploySmartAccount, Hex } from "thirdweb";
+import { inAppWallet } from "thirdweb/wallets";
 
 
 const ConnectButtonPage: NextPage = () => {
-  const account = useActiveAccount();
-  
+  const wallets = [
+    inAppWallet({
+      auth: {
+        options: ['google'],
+        mode: 'redirect',
+        redirectUrl: 'http://localhost:3000/connect-button'
+      },
+    }),
+  ];
   return (
     <ConnectButton
-      client={client} 
-      accountAbstraction={{
-        chain: defineChain(37084624),
-        sponsorGas: true,
-      }}
+      client={client}
+      wallets={wallets}
+      
       auth={{
         isLoggedIn: async (address) => {
           console.log("checking if logged in!", { address });
@@ -25,20 +30,7 @@ const ConnectButtonPage: NextPage = () => {
           console.log("logging in!");
           await login(params);
         },
-        getLoginPayload: async ({ address }) => {
-          await deploySmartAccount({
-            //@ts-ignore
-            smartAccount: account,
-            accountContract: getContract({
-              client,
-              address: account?.address as Hex,
-              chain: defineChain(37084624),
-            }),
-            chain: defineChain(37084624),
-            client
-          })
-          return generatePayload({ address, chainId: 37084624 })
-        },
+        getLoginPayload: async ({ address }) => generatePayload({ address, chainId: 17000 }),
         doLogout: async () => {
           console.log("logging out!");
           await logout();
